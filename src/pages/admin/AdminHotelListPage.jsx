@@ -1,115 +1,175 @@
 import { useState, useEffect } from "react";
+import { mockHotelApi } from "../../api/mockApi";
 import { useNavigate } from "react-router-dom";
-import AdminHotelFilter from "../../components/admin/hotels/AdminHotelFilter";
-import AdminHotelTable from "../../components/admin/hotels/AdminHotelTable";
-import Pagination from "../../components/common/Pagination";
-import { adminHotelApi } from "../../api/adminHotelApi";
-import Loader from "../../components/common/Loader";
-import ErrorMessage from "../../components/common/ErrorMessage";
 
 const AdminHotelListPage = () => {
-  const navigate = useNavigate();
   const [hotels, setHotels] = useState([]);
-  const [filters, setFilters] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [filters, setFilters] = useState({
+    search: "",
+    status: "",
+    region: ""
+  });
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchHotels();
-  }, [currentPage]);
+    loadHotels();
+  }, [filters]);
 
-  const fetchHotels = async () => {
+  const loadHotels = async () => {
     try {
       setLoading(true);
-      const data = await adminHotelApi.getHotels({
-        ...filters,
-        page: currentPage,
-      });
-      setHotels(data.hotels || []);
-      setTotalPages(data.totalPages || 1);
-    } catch (err) {
-      setError(err.message || "데이터를 불러오는데 실패했습니다.");
+      const data = await mockHotelApi.getHotels(filters);
+      setHotels(data.hotels);
+    } catch (error) {
+      console.error("호텔 목록 로드 실패:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFilterChange = (newFilters) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-  };
-
-  const handleSearch = () => {
-    setCurrentPage(1);
-    fetchHotels();
-  };
-
-  const handleApprove = async (hotelId) => {
+  const handleStatusChange = async (hotelId, newStatus) => {
     try {
-      await adminHotelApi.approveHotel(hotelId);
-      fetchHotels();
-    } catch (err) {
-      alert(err.message || "승인에 실패했습니다.");
+      if (newStatus === "approved") {
+        await mockHotelApi.approveHotel(hotelId);
+      } else if (newStatus === "rejected") {
+        await mockHotelApi.rejectHotel(hotelId, "관리자 검토 결과");
+      }
+      loadHotels(); // 목록 새로고침
+    } catch (error) {
+      console.error("호텔 상태 변경 실패:", error);
     }
   };
 
-  const handleReject = async (hotelId) => {
-    const reason = prompt("거부 사유를 입력하세요:");
-    if (!reason) return;
-
-    try {
-      await adminHotelApi.rejectHotel(hotelId, reason);
-      fetchHotels();
-    } catch (err) {
-      alert(err.message || "거부에 실패했습니다.");
-    }
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      approved: { label: "승인완료", class: "success" },
+      pending: { label: "승인대기", class: "warning" },
+      rejected: { label: "승인거부", class: "danger" }
+    };
+    const config = statusMap[status] || { label: status, class: "secondary" };
+    return <span className={`badge ${config.class}`}>{config.label}</span>;
   };
-
-  const handleDelete = async (hotelId) => {
-    if (!confirm("정말 삭제하시겠습니까?")) return;
-
-    try {
-      await adminHotelApi.deleteHotel(hotelId);
-      fetchHotels();
-    } catch (err) {
-      alert(err.message || "삭제에 실패했습니다.");
-    }
-  };
-
-  if (loading) return <Loader fullScreen />;
-  if (error) return <ErrorMessage message={error} onRetry={fetchHotels} />;
 
   return (
-    <div className="admin-hotel-list-page">
+    <div className="admin-hotel-page">
       <div className="page-header">
-        <h1>호텔 관리</h1>
-        <button
-          onClick={() => navigate("/admin/hotels/new")}
+        <h1>🏨 호텔 관리</h1>
+        <button 
           className="btn btn-primary"
+          onClick={() => navigate('/admin/hotels/new')}
         >
-          호텔 등록
+          ➕ 호텔 등록
         </button>
       </div>
 
-      <AdminHotelFilter
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onSearch={handleSearch}
-      />
+      {/* 필터 영역 */}
+      <div className="filter-section">
+        <div className="filter-grid">
+          <input
+            type="text"
+            placeholder="호텔명으로 검색..."
+            value={filters.search}
+            onChange={(e) => setFilters({...filters, search: e.target.value})}
+          />
+          
+          <select 
+            value={filters.status}
+            onChange={(e) => setFilters({...filters, status: e.target.value})}
+          >
+            <option value="">전체 상태</option>
+            <option value="approved">승인완료</option>
+            <option value="pending">승인대기</option>
+            <option value="rejected">승인거부</option>
+          </select>
 
-      <AdminHotelTable
-        hotels={hotels}
-        onApprove={handleApprove}
-        onReject={handleReject}
-        onDelete={handleDelete}
-      />
+          <select
+            value={filters.region}
+            onChange={(e) => setFilters({...filters, region: e.target.value})}
+          >
+            <option value="">전체 지역</option>
+            <option value="서울">서울</option>
+            <option value="부산">부산</option>
+            <option value="제주">제주</option>
+            <option value="경기">경기</option>
+          </select>
+        </div>
+      </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      {/* 호텔 목록 */}
+      {loading ? (
+        <div className="loading">호텔 목록 로딩 중...</div>
+      ) : (
+        <div className="hotels-grid">
+          {hotels.map(hotel => (
+            <div key={hotel.id} className="hotel-card">
+              <div className="hotel-image">
+                <img 
+                  src={hotel.images[0] || "/api/placeholder/hotel-default.jpg"} 
+                  alt={hotel.name}
+                />
+                <div className="hotel-status">
+                  {getStatusBadge(hotel.status)}
+                </div>
+              </div>
+              
+              <div className="hotel-content">
+                <h3 className="hotel-name">{hotel.name}</h3>
+                <p className="hotel-address">📍 {hotel.address}</p>
+                
+                <div className="hotel-info">
+                  <span className="hotel-category">{hotel.category}</span>
+                  <span className="hotel-rating">⭐ {hotel.rating} ({hotel.reviewCount})</span>
+                  <span className="hotel-rooms">🛏️ {hotel.rooms}실</span>
+                </div>
+
+                <div className="hotel-price">
+                  ₩{hotel.price.min.toLocaleString()} ~ ₩{hotel.price.max.toLocaleString()}
+                </div>
+
+                <div className="hotel-actions">
+                  <button 
+                    className="btn btn-outline-sm"
+                    onClick={() => navigate(`/admin/hotels/${hotel.id}`)}
+                  >
+                    📋 상세보기
+                  </button>
+                  
+                  {hotel.status === "pending" && (
+                    <>
+                      <button 
+                        className="btn btn-success-sm"
+                        onClick={() => handleStatusChange(hotel.id, "approved")}
+                      >
+                        ✅ 승인
+                      </button>
+                      <button 
+                        className="btn btn-danger-sm"
+                        onClick={() => handleStatusChange(hotel.id, "rejected")}
+                      >
+                        ❌ 거부
+                      </button>
+                    </>
+                  )}
+                  
+                  <button 
+                    className="btn btn-outline-sm"
+                    onClick={() => navigate(`/admin/hotels/${hotel.id}/edit`)}
+                  >
+                    ✏️ 수정
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {hotels.length === 0 && !loading && (
+        <div className="empty-state">
+          <p>등록된 호텔이 없습니다.</p>
+        </div>
+      )}
     </div>
   );
 };
