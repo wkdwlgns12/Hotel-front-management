@@ -5,16 +5,11 @@ import AdminForgotPasswordPage from "../pages/auth/AdminForgotPasswordPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import AdminHotelListPage from "../pages/admin/AdminHotelListPage";
 import AdminHotelCreatePage from "../pages/admin/AdminHotelCreatePage";
-import AdminHotelEditPage from "../pages/admin/AdminHotelEditPage";
-import AdminBookingListPage from "../pages/admin/AdminBookingListPage";
-import AdminBookingDetailPage from "../pages/admin/AdminBookingDetailPage";
+import AdminHotelEditPage from "../pages/admin/AdminHotelEditPage.jsx";
 import AdminUserListPage from "../pages/admin/AdminUserListPage";
 import AdminUserDetailPage from "../pages/admin/AdminUserDetailPage";
 import AdminReviewListPage from "../pages/admin/AdminReviewListPage";
 import AdminReviewDetailPage from "../pages/admin/AdminReviewDetailPage";
-import AdminCouponListPage from "../pages/admin/AdminCouponListPage";
-import AdminCouponCreatePage from "../pages/admin/AdminCouponCreatePage";
-import AdminCouponEditPage from "../pages/admin/AdminCouponEditPage";
 import AdminSettingsPage from "../pages/admin/AdminSettingsPage";
 import AdminMyProfilePage from "../pages/admin/AdminMyProfilePage";
 
@@ -52,14 +47,6 @@ const adminRoutes = [
         element: <AdminHotelEditPage />,
       },
       {
-        path: "bookings",
-        element: <AdminBookingListPage />,
-      },
-      {
-        path: "bookings/:bookingId",
-        element: <AdminBookingDetailPage />,
-      },
-      {
         path: "users",
         element: <AdminUserListPage />,
       },
@@ -74,18 +61,6 @@ const adminRoutes = [
       {
         path: "reviews/:reviewId",
         element: <AdminReviewDetailPage />,
-      },
-      {
-        path: "coupons",
-        element: <AdminCouponListPage />,
-      },
-      {
-        path: "coupons/new",
-        element: <AdminCouponCreatePage />,
-      },
-      {
-        path: "coupons/:couponId/edit",
-        element: <AdminCouponEditPage />,
       },
       {
         path: "settings",
