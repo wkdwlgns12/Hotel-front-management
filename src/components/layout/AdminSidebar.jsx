@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 const AdminSidebar = () => {
   const menuItems = [
     { path: "/admin/dashboard", label: "대시보드", icon: "📊" },
-    { path: "/admin/hotels", label: "호텔 관리", icon: "🏨" },
+    { path: "/admin/bookings", label: "예약 관리", icon: "📅" },
     { path: "/admin/users", label: "회원 관리", icon: "👥" },
     { path: "/admin/reviews", label: "리뷰 관리", icon: "⭐" },
     { path: "/admin/settings", label: "설정", icon: "⚙️" },
@@ -14,7 +14,7 @@ const AdminSidebar = () => {
     <aside className="admin-sidebar">
       <div className="admin-sidebar-inner">
         <div className="sidebar-logo">
-          <h2>🏨 Hotel Admin</h2>
+          <h2>Hotel Admin</h2>
         </div>
         <nav>
           <ul className="sidebar-menu">
@@ -24,8 +24,8 @@ const AdminSidebar = () => {
                   to={item.path}
                   className={({ isActive }) => (isActive ? "active" : "")}
                 >
-                  <span className="menu-icon">{item.icon}</span>
-                  <span className="menu-label">{item.label}</span>
+                  <span>{item.icon}</span>
+                  <span>{item.label}</span>
                 </NavLink>
               </li>
             ))}

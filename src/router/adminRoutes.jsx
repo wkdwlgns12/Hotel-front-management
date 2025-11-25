@@ -1,17 +1,16 @@
 import { Navigate } from "react-router-dom";
 import AdminLayout from "../components/layout/AdminLayout";
-import AdminLoginPage from "../pages/auth/AdminLoginPage";
-import AdminForgotPasswordPage from "../pages/auth/AdminForgotPasswordPage";
-import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
-import AdminHotelListPage from "../pages/admin/AdminHotelListPage";
-import AdminHotelDetailPage from "../pages/admin/AdminHotelDetailPage";
-import AdminHotelEditPage from "../pages/admin/AdminHotelEditPage";
-import AdminUserListPage from "../pages/admin/AdminUserListPage";
-import AdminUserDetailPage from "../pages/admin/AdminUserDetailPage";
-import AdminReviewListPage from "../pages/admin/AdminReviewListPage";
-import AdminReviewDetailPage from "../pages/admin/AdminReviewDetailPage";
-import AdminSettingsPage from "../pages/admin/AdminSettingsPage";
-import AdminMyProfilePage from "../pages/admin/AdminMyProfilePage";
+import AdminLoginPage from "../pages/auth/AdminLoginPage.jsx";
+import AdminForgotPasswordPage from "../pages/auth/AdminForgotPasswordPage.jsx";
+import AdminDashboardPage from "../pages/admin/AdminDashboardPage.jsx";
+import AdminBookingListPage from "../pages/admin/AdminBookingListPage.jsx";
+import AdminBookingDetailPage from "../pages/admin/AdminBookingDetailPage.jsx";
+import AdminUserListPage from "../pages/admin/AdminUserListPage.jsx";
+import AdminUserDetailPage from "../pages/admin/AdminUserDetailPage.jsx";
+import AdminReviewListPage from "../pages/admin/AdminReviewListPage.jsx";
+import AdminReviewDetailPage from "../pages/admin/AdminReviewDetailPage.jsx";
+import AdminSettingsPage from "../pages/admin/AdminSettingsPage.jsx";
+import AdminMyProfilePage from "../pages/admin/AdminMyProfilePage.jsx";
 
 const adminRoutes = [
   {
@@ -35,16 +34,12 @@ const adminRoutes = [
         element: <AdminDashboardPage />,
       },
       {
-        path: "hotels",
-        element: <AdminHotelListPage />,
+        path: "bookings",
+        element: <AdminBookingListPage />,
       },
       {
-        path: "hotels/:hotelId",
-        element: <AdminHotelDetailPage />,
-      },
-      {
-        path: "hotels/:hotelId/edit",
-        element: <AdminHotelEditPage />,
+        path: "bookings/:bookingId",
+        element: <AdminBookingDetailPage />,
       },
       {
         path: "users",
