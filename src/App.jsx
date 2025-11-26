@@ -1,27 +1,22 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useRoutes, BrowserRouter, Navigate } from "react-router-dom";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import adminRoutes from "./router/adminRoutes";
 import "./styles/index.scss";
+
+
+const AppRoutes = () => {
+  const element = useRoutes([
+    { path: "/", element: <Navigate to="/admin/login" replace /> }, 
+    ...adminRoutes, 
+  ]);
+  return element;
+};
 
 function App() {
   return (
     <BrowserRouter>
       <AdminAuthProvider>
-        <Routes>
-          <Route path="/" element={<Navigate to="/admin/login" replace />} />
-          {adminRoutes.map((route, index) => (
-            <Route key={index} path={route.path} element={route.element}>
-              {route.children?.map((child, childIndex) => (
-                <Route
-                  key={childIndex}
-                  index={child.index}
-                  path={child.path}
-                  element={child.element}
-                />
-              ))}
-            </Route>
-          ))}
-        </Routes>
+        <AppRoutes />
       </AdminAuthProvider>
     </BrowserRouter>
   );

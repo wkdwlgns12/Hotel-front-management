@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { mockUserApi } from "../../api/mockApi";
 import { useNavigate } from "react-router-dom";
@@ -6,206 +5,84 @@ import { useNavigate } from "react-router-dom";
 const AdminUserListPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    search: "",
-    status: "",
-    type: "",
-    grade: ""
-  });
+  const [activeTab, setActiveTab] = useState("all");
+  const [filters, setFilters] = useState({ search: "", status: "", grade: "" });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadUsers();
-  }, [filters]);
+  useEffect(() => { loadUsers(); }, [filters, activeTab]);
 
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const data = await mockUserApi.getUsers(filters);
+      const typeFilter = activeTab === 'all' ? '' : activeTab;
+      const data = await mockUserApi.getUsers({ ...filters, type: typeFilter });
       setUsers(data.users);
-    } catch (error) {
-      console.error("회원 목록 로드 실패:", error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { console.error(error); } 
+    finally { setLoading(false); }
   };
 
   const handleStatusChange = async (userId, newStatus) => {
-    try {
-      await mockUserApi.updateUserStatus(userId, newStatus);
-      loadUsers(); // 목록 새로고침
-    } catch (error) {
-      console.error("회원 상태 변경 실패:", error);
-    }
+    await mockUserApi.updateUserStatus(userId, newStatus);
+    loadUsers();
   };
 
+  // ★ 상태 뱃지: 활성(초록) / 비활성(빨강) ★
   const getStatusBadge = (status) => {
-    const statusMap = {
-      active: { label: "활성", class: "success" },
-      inactive: { label: "비활성", class: "secondary" },
-      suspended: { label: "정지", class: "danger" }
-    };
-    const config = statusMap[status] || { label: status, class: "secondary" };
-    return <span className={`badge ${config.class}`}>{config.label}</span>;
-  };
-
-  const getGradeBadge = (grade) => {
-    const gradeMap = {
-      VVIP: { label: "VVIP", class: "purple" },
-      VIP: { label: "VIP", class: "gold" },
-      Gold: { label: "Gold", class: "warning" },
-      Silver: { label: "Silver", class: "info" },
-      Bronze: { label: "Bronze", class: "secondary" }
-    };
-    const config = gradeMap[grade] || { label: grade, class: "secondary" };
-    return <span className={`badge ${config.class}`}>{config.label}</span>;
-  };
-
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString('ko-KR');
+    if (status === 'active') {
+      return <span className="badge badge-active">활성</span>; // 초록
+    } else {
+      return <span className="badge badge-inactive">비활성</span>; // 빨강
+    }
   };
 
   return (
     <div className="admin-user-page">
-      <div className="page-header">
-        <h1>👥 회원 관리</h1>
-        <p>서비스 이용 회원을 관리하세요</p>
+      <div className="page-header"><h1>👥 회원 관리</h1></div>
+
+      <div className="tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        {/* 탭 버튼들도 파란색 계열로 통일 */}
+        <button onClick={() => setActiveTab("all")} className={`btn ${activeTab === "all" ? "btn-primary" : "btn-outline"}`}>전체</button>
+        <button onClick={() => setActiveTab("regular")} className={`btn ${activeTab === "regular" ? "btn-primary" : "btn-outline"}`}>일반 회원</button>
+        <button onClick={() => setActiveTab("business")} className={`btn ${activeTab === "business" ? "btn-primary" : "btn-outline"}`}>사업자 회원</button>
       </div>
 
-      {/* 필터 영역 */}
-      <div className="filter-section">
-        <div className="filter-grid">
-          <input
-            type="text"
-            placeholder="이름/이메일로 검색..."
-            value={filters.search}
-            onChange={(e) => setFilters({...filters, search: e.target.value})}
-          />
-          
-          <select 
-            value={filters.status}
-            onChange={(e) => setFilters({...filters, status: e.target.value})}
-          >
+      <div className="card" style={{padding:'15px', marginBottom:'20px'}}>
+        <div className="filter-grid" style={{display:'flex', gap:'10px'}}>
+          <input type="text" placeholder="이름/이메일 검색" value={filters.search} onChange={(e) => setFilters({...filters, search: e.target.value})} style={{padding:'8px', border:'1px solid #ddd', borderRadius:'4px'}} />
+          <select value={filters.status} onChange={(e) => setFilters({...filters, status: e.target.value})} style={{padding:'8px', border:'1px solid #ddd', borderRadius:'4px'}}>
             <option value="">전체 상태</option>
             <option value="active">활성</option>
             <option value="inactive">비활성</option>
-            <option value="suspended">정지</option>
-          </select>
-
-          <select
-            value={filters.type}
-            onChange={(e) => setFilters({...filters, type: e.target.value})}
-          >
-            <option value="">전체 유형</option>
-            <option value="regular">일반회원</option>
-            <option value="business">사업자회원</option>
-          </select>
-
-          <select
-            value={filters.grade}
-            onChange={(e) => setFilters({...filters, grade: e.target.value})}
-          >
-            <option value="">전체 등급</option>
-            <option value="VVIP">VVIP</option>
-            <option value="VIP">VIP</option>
-            <option value="Gold">Gold</option>
-            <option value="Silver">Silver</option>
-            <option value="Bronze">Bronze</option>
           </select>
         </div>
       </div>
 
-      {/* 회원 테이블 */}
-      {loading ? (
-        <div className="loading">회원 목록 로딩 중...</div>
-      ) : (
-        <div className="table-wrapper">
+      {loading ? <div className="loading">로딩 중...</div> : (
+        <div className="table-wrapper card">
           <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>회원 정보</th>
-                <th>연락처</th>
-                <th>유형</th>
-                <th>등급</th>
-                <th>예약횟수</th>
-                <th>총 결제금액</th>
-                <th>가입일</th>
-                <th>상태</th>
-                <th>관리</th>
-              </tr>
-            </thead>
+            <thead><tr><th>회원명</th><th>연락처</th><th>유형</th><th>가입일</th><th>상태</th><th>관리</th></tr></thead>
             <tbody>
               {users.map(user => (
                 <tr key={user.id}>
-                  <td>{user.id}</td>
                   <td>
-                    <div className="user-info">
-                      <div className="user-avatar">
-                        <img src={user.avatar || "/api/placeholder/avatar-default.jpg"} alt={user.name} />
-                      </div>
-                      <div className="user-details">
-                        <button 
-                          className="link-button user-name"
-                          onClick={() => navigate(`/admin/users/${user.id}`)}
-                        >
-                          {user.name}
-                        </button>
-                        <div className="user-email">{user.email}</div>
-                      </div>
-                    </div>
+                    <div style={{fontWeight:'bold'}}>{user.name}</div>
+                    <div style={{fontSize:'12px', color:'#64748b'}}>{user.email}</div>
                   </td>
                   <td>{user.phone}</td>
-                  <td>
-                    <span className={`type-badge ${user.type}`}>
-                      {user.type === "regular" ? "일반" : "사업자"}
-                    </span>
-                  </td>
-                  <td>{getGradeBadge(user.grade)}</td>
-                  <td className="text-center">{user.totalBookings}회</td>
-                  <td className="amount">₩{user.totalSpent.toLocaleString()}</td>
-                  <td>{formatDate(user.joinDate)}</td>
+                  <td><span className="badge badge-secondary">{user.type === "business" ? "사업자" : "일반"}</span></td>
+                  <td>{user.joinDate}</td>
                   <td>{getStatusBadge(user.status)}</td>
                   <td>
-                    <div className="action-buttons">
-                      {user.status === "active" && (
-                        <button 
-                          className="btn btn-warning-sm"
-                          onClick={() => handleStatusChange(user.id, "suspended")}
-                        >
-                          🚫 정지
-                        </button>
-                      )}
-                      
-                      {user.status === "suspended" && (
-                        <button 
-                          className="btn btn-success-sm"
-                          onClick={() => handleStatusChange(user.id, "active")}
-                        >
-                          ✅ 해제
-                        </button>
-                      )}
-                      
-                      {user.status === "inactive" && (
-                        <button 
-                          className="btn btn-info-sm"
-                          onClick={() => handleStatusChange(user.id, "active")}
-                        >
-                          🔄 활성화
-                        </button>
-                      )}
-                    </div>
+                    {/* ★ 버튼은 그냥 파란색 (btn-primary) 사용 ★ */}
+                    {user.status === "active" ? 
+                      <button className="btn btn-primary" style={{padding:'6px 12px', fontSize:'0.8rem'}} onClick={() => handleStatusChange(user.id, "inactive")}>비활성 처리</button> :
+                      <button className="btn btn-primary" style={{padding:'6px 12px', fontSize:'0.8rem'}} onClick={() => handleStatusChange(user.id, "active")}>활성 처리</button>
+                    }
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {users.length === 0 && !loading && (
-        <div className="empty-state">
-          <p>조건에 맞는 회원이 없습니다.</p>
         </div>
       )}
     </div>

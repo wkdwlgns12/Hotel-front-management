@@ -1,81 +1,45 @@
 import { useState, useEffect } from "react";
 import AdminReviewFilter from "../../components/admin/reviews/AdminReviewFilter";
 import AdminReviewTable from "../../components/admin/reviews/AdminReviewTable";
-import Pagination from "../../components/common/Pagination";
 import { adminReviewApi } from "../../api/adminReviewApi";
 import Loader from "../../components/common/Loader";
-import ErrorMessage from "../../components/common/ErrorMessage";
 
 const AdminReviewListPage = () => {
   const [reviews, setReviews] = useState([]);
   const [filters, setFilters] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchReviews();
-  }, [currentPage]);
+  useEffect(() => { fetchReviews(); }, []);
 
   const fetchReviews = async () => {
     try {
       setLoading(true);
-      const data = await adminReviewApi.getReviews({
-        ...filters,
-        page: currentPage,
-      });
+      const data = await adminReviewApi.getReviews(filters);
       setReviews(data.reviews || []);
-      setTotalPages(data.totalPages || 1);
-    } catch (err) {
-      setError(err.message || "데이터를 불러오는데 실패했습니다.");
-    } finally {
-      setLoading(false);
+    } finally { setLoading(false); }
+  };
+
+  const handleStatus = (id, status) => {
+    // UI상에서 즉시 반영 (실제 API 연결 시 API 호출 필요)
+    if(confirm(`리뷰를 ${status === 'approved' ? '승인' : '거부'} 하시겠습니까?`)){
+        setReviews(reviews.map(r => r.id === id ? { ...r, status } : r));
     }
   };
 
-  const handleFilterChange = (newFilters) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-  };
-
-  const handleSearch = () => {
-    setCurrentPage(1);
-    fetchReviews();
-  };
-
-  const handleDelete = async (reviewId) => {
-    if (!confirm("정말 삭제하시겠습니까?")) return;
-
-    try {
-      await adminReviewApi.deleteReview(reviewId);
+  const handleDelete = async (id) => {
+    if (confirm("정말 리뷰를 삭제하시겠습니까?")) {
+      await adminReviewApi.deleteReview(id);
       fetchReviews();
-    } catch (err) {
-      alert(err.message || "삭제에 실패했습니다.");
     }
   };
 
   if (loading) return <Loader fullScreen />;
-  if (error) return <ErrorMessage message={error} onRetry={fetchReviews} />;
 
   return (
-    <div className="admin-review-list-page">
-      <div className="page-header">
-        <h1>리뷰 관리</h1>
-      </div>
-
-      <AdminReviewFilter
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onSearch={handleSearch}
-      />
-
-      <AdminReviewTable reviews={reviews} onDelete={handleDelete} />
-
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+    <div className="admin-review-page">
+      <div className="page-header"><h1>⭐ 리뷰 관리</h1></div>
+      <AdminReviewFilter filters={filters} onFilterChange={(f) => setFilters({...filters, ...f})} onSearch={fetchReviews} />
+      <AdminReviewTable reviews={reviews} onStatusChange={handleStatus} onDelete={handleDelete} />
     </div>
   );
 };
