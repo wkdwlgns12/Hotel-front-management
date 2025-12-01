@@ -16,6 +16,32 @@ const createResponse = (data) => {
   return Promise.resolve(data);
 };
 
+// ★ 수정된 로컬 스토리지 헬퍼 함수 (에러 방지 기능 추가) ★
+const getStoredData = (key, initialData) => {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error(`Error parsing localStorage key "${key}":`, error);
+    // 에러 발생 시 저장소를 초기화하여 다음 번엔 오류가 안 나게 함
+    localStorage.removeItem(key);
+  }
+  
+  // 데이터가 없거나 에러가 나면 초기 데이터로 세팅하고 저장
+  localStorage.setItem(key, JSON.stringify(initialData));
+  return initialData;
+};
+
+const setStoredData = (key, data) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error("Error saving to localStorage:", error);
+  }
+};
+
 // Mock 인증 API
 export const mockAuthApi = {
   login: async (credentials) => {
