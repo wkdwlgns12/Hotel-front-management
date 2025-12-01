@@ -1,14 +1,11 @@
-import { mockCouponApi } from "./mockApi";
-
-// 실제 API 연동 시 axiosClient 사용, 지금은 Mock 사용
-const USE_MOCK = true;
+import axiosClient from "./axiosClient";
 
 export const adminCouponApi = {
-  getCoupons: () => mockCouponApi.getCoupons(),
-  getCouponById: (id) => mockCouponApi.getCouponById(id),
-  createCoupon: (data) => mockCouponApi.createCoupon(data),
-  updateCoupon: (id, data) => mockCouponApi.updateCoupon(id, data),
-  deleteCoupon: (id) => mockCouponApi.deleteCoupon(id),
+  getCoupons: () => axiosClient.get("/coupons"),
+  getCouponById: (id) => axiosClient.get(`/coupons/${id}`),
+  createCoupon: (data) => axiosClient.post("/coupons", data),
+  updateCoupon: (id, data) => axiosClient.put(`/coupons/${id}`, data),
+  deleteCoupon: (id) => axiosClient.delete(`/coupons/${id}`),
 };
 
 export default adminCouponApi;
