@@ -7,9 +7,9 @@ import BusinessMyHotelPage from "../pages/business/BusinessMyHotelPage";
 import BusinessBookingPage from "../pages/business/BusinessBookingPage";
 import BusinessReviewPage from "../pages/business/BusinessReviewPage";
 import BusinessCouponPage from "../pages/business/BusinessCouponPage";
-// ★ 새로 만든 페이지 import
-import BusinessSettingsPage from "../pages/business/BusinessSettingsPage";
-import BusinessMyProfilePage from "../pages/business/BusinessMyProfilePage";
+import BusinessCouponDetailPage from "../pages/business/BusinessCouponDetailPage"; // ★ 추가
+import AdminSettingsPage from "../pages/admin/AdminSettingsPage";
+import AdminMyProfilePage from "../pages/admin/AdminMyProfilePage";
 
 const businessRoutes = [
   { path: "/business/login", element: <BusinessLoginPage /> },
@@ -24,9 +24,9 @@ const businessRoutes = [
       { path: "bookings", element: <BusinessBookingPage /> },
       { path: "reviews", element: <BusinessReviewPage /> },
       { path: "coupons", element: <BusinessCouponPage /> },
-      // ★ 라우트 연결 ★
-      { path: "settings", element: <BusinessSettingsPage /> },
-      { path: "me", element: <BusinessMyProfilePage /> },
+      { path: "coupons/:couponId", element: <BusinessCouponDetailPage /> }, // 라우트 추가
+      { path: "settings", element: <AdminSettingsPage /> },
+      { path: "me", element: <AdminMyProfilePage /> },
     ],
   },
 ];
