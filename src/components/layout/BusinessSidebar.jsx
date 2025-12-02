@@ -6,6 +6,10 @@ const BusinessSidebar = () => {
     { path: "/business/my-hotel", label: "내 호텔 관리", icon: "🏨" },
     { path: "/business/bookings", label: "예약 관리", icon: "📅" },
     { path: "/business/reviews", label: "리뷰 관리", icon: "⭐" },
+    { path: "/business/coupons", label: "쿠폰 관리", icon: "🎫" },
+    // ★ 메뉴 추가됨 ★
+    { path: "/business/settings", label: "설정", icon: "⚙️" },
+    { path: "/business/me", label: "내 정보", icon: "👤" },
   ];
 
   return (

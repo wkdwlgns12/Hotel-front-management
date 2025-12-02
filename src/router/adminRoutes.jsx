@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import ProtectedRoute from "./ProtectedRoute"; // ★ 추가됨
+import ProtectedRoute from "./ProtectedRoute";
 import AdminLayout from "../components/layout/AdminLayout";
 import AdminLoginPage from "../pages/auth/AdminLoginPage";
 import AdminForgotPasswordPage from "../pages/auth/AdminForgotPasswordPage";
@@ -7,8 +7,6 @@ import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import AdminHotelListPage from "../pages/admin/AdminHotelListPage";
 import AdminHotelCreatePage from "../pages/admin/AdminHotelCreatePage";
 import AdminHotelEditPage from "../pages/admin/AdminHotelEditPage";
-import AdminBookingListPage from "../pages/admin/AdminBookingListPage";
-import AdminBookingDetailPage from "../pages/admin/AdminBookingDetailPage";
 import AdminUserListPage from "../pages/admin/AdminUserListPage";
 import AdminUserDetailPage from "../pages/admin/AdminUserDetailPage";
 import AdminReviewListPage from "../pages/admin/AdminReviewListPage";
@@ -30,7 +28,7 @@ const adminRoutes = [
   },
   {
     path: "/admin",
-    element: <ProtectedRoute />, 
+    element: <ProtectedRoute />,
     children: [
       {
         element: <AdminLayout />,
@@ -54,14 +52,6 @@ const adminRoutes = [
           {
             path: "hotels/:hotelId/edit",
             element: <AdminHotelEditPage />,
-          },
-          {
-            path: "bookings",
-            element: <AdminBookingListPage />,
-          },
-          {
-            path: "bookings/:bookingId",
-            element: <AdminBookingDetailPage />,
           },
           {
             path: "users",

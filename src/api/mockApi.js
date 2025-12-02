@@ -16,328 +16,200 @@ const createResponse = (data) => {
   return Promise.resolve(data);
 };
 
-// Mock 인증 API
+// 로컬 스토리지 헬퍼
+const getStoredData = (key, initialData) => {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+  } catch (e) {
+    console.error(e);
+  }
+  localStorage.setItem(key, JSON.stringify(initialData));
+  return initialData;
+};
+
+const setStoredData = (key, data) => {
+  localStorage.setItem(key, JSON.stringify(data));
+};
+
+// ... (mockAuthApi, mockHotelApi, mockBookingApi, mockUserApi는 기존 유지 - 생략하지 말고 기존 코드 그대로 두세요. 여기선 리뷰/쿠폰/통계만 보여드립니다) ...
+// (편의상 위쪽 mockAuthApi 등은 기존 파일 내용을 유지한다고 가정합니다. 아래 mockReviewApi를 교체해주세요.)
+
 export const mockAuthApi = {
-  login: async (credentials) => {
-    await delay();
-
-    if (
-      credentials.email === "admin@hotel.com" &&
-      credentials.password === "admin1234"
-    ) {
-      return createResponse({
-        token: "mock-jwt-token-" + Date.now(),
-        admin: mockAdminUser,
-      });
-    }
-
-    throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
-  },
-
-  logout: async () => {
-    await delay(200);
-    return createResponse({ message: "Logged out successfully" });
-  },
-
-  getMyInfo: async () => {
-    await delay();
-    return createResponse(mockAdminUser);
-  },
-
-  changePassword: async (data) => {
-    await delay();
-    return createResponse({ message: "Password changed successfully" });
-  },
-
-  forgotPassword: async (email) => {
-    await delay();
-    return createResponse({ message: "Reset email sent" });
-  },
+    login: async (credentials) => {
+      await delay();
+      if (credentials.email === "admin@hotel.com" && credentials.password === "admin1234") {
+        return createResponse({ token: "mock-jwt-token-" + Date.now(), admin: mockAdminUser });
+      }
+      if (credentials.email && credentials.password) {
+         return createResponse({ token: "mock-business-token-" + Date.now(), admin: { ...mockAdminUser, name: "홍길동 사장님", role: "business" } });
+      }
+      throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
+    },
+    logout: async () => { await delay(200); return createResponse({ message: "Logged out" }); },
+    getMyInfo: async () => { await delay(); return createResponse(mockAdminUser); },
+    changePassword: async () => { await delay(); return createResponse({ message: "Success" }); },
+    forgotPassword: async () => { await delay(); return createResponse({ message: "Sent" }); },
 };
 
-// Mock 호텔 API
 export const mockHotelApi = {
-  getHotels: async (params = {}) => {
-    await delay();
-    let filtered = [...mockHotels];
-
-    // 필터링
-    if (params.search) {
-      filtered = filtered.filter((h) =>
-        h.name.toLowerCase().includes(params.search.toLowerCase())
-      );
+    getHotels: async (params = {}) => {
+      await delay();
+      let hotels = getStoredData("hotels", mockHotels);
+      // 필터 로직
+      if (params.search) hotels = hotels.filter(h => h.name.toLowerCase().includes(params.search.toLowerCase()));
+      if (params.status) hotels = hotels.filter(h => h.status === params.status);
+      if (params.region) hotels = hotels.filter(h => h.region === params.region);
+      return createResponse({ hotels, totalPages: 1, currentPage: 1 });
+    },
+    getHotelById: async (id) => {
+      await delay();
+      const hotels = getStoredData("hotels", mockHotels);
+      const hotel = hotels.find(h => h.id === parseInt(id));
+      if(!hotel) throw new Error("Not found");
+      return createResponse(hotel);
+    },
+    createHotel: async (data) => {
+      await delay();
+      const hotels = getStoredData("hotels", mockHotels);
+      const newId = hotels.length > 0 ? Math.max(...hotels.map(h => h.id)) + 1 : 1;
+      const newHotel = { id: newId, ...data, status: "pending", createdAt: new Date().toISOString(), rating: 0, reviewCount: 0, price: data.price || {min:0, max:0} };
+      hotels.push(newHotel);
+      setStoredData("hotels", hotels);
+      return createResponse(newHotel);
+    },
+    updateHotel: async (id, data) => {
+        await delay();
+        const hotels = getStoredData("hotels", mockHotels);
+        const idx = hotels.findIndex(h => h.id === parseInt(id));
+        if(idx === -1) throw new Error("Not found");
+        hotels[idx] = { ...hotels[idx], ...data };
+        setStoredData("hotels", hotels);
+        return createResponse(hotels[idx]);
+    },
+    deleteHotel: async (id) => {
+        await delay();
+        let hotels = getStoredData("hotels", mockHotels);
+        hotels = hotels.filter(h => h.id !== parseInt(id));
+        setStoredData("hotels", hotels);
+        return createResponse({ message: "Deleted" });
+    },
+    approveHotel: async (id) => {
+        await delay();
+        const hotels = getStoredData("hotels", mockHotels);
+        const h = hotels.find(x => x.id === parseInt(id));
+        if(h) { h.status = "approved"; setStoredData("hotels", hotels); }
+        return createResponse({ message: "Approved" });
+    },
+    rejectHotel: async (id) => {
+        await delay();
+        const hotels = getStoredData("hotels", mockHotels);
+        const h = hotels.find(x => x.id === parseInt(id));
+        if(h) { h.status = "rejected"; setStoredData("hotels", hotels); }
+        return createResponse({ message: "Rejected" });
     }
-    if (params.status) {
-      filtered = filtered.filter((h) => h.status === params.status);
-    }
-    if (params.region) {
-      filtered = filtered.filter((h) => h.region === params.region);
-    }
-
-    return createResponse({
-      hotels: filtered,
-      totalPages: 1,
-      currentPage: params.page || 1,
-    });
-  },
-
-  getHotelById: async (hotelId) => {
-    await delay();
-    const hotel = mockHotels.find((h) => h.id === parseInt(hotelId));
-    if (!hotel) throw new Error("Hotel not found");
-    return createResponse(hotel);
-  },
-
-  createHotel: async (data) => {
-    await delay();
-    const newHotel = {
-      id: mockHotels.length + 1,
-      ...data,
-      status: "pending",
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-    mockHotels.push(newHotel);
-    return createResponse(newHotel);
-  },
-
-  updateHotel: async (hotelId, data) => {
-    await delay();
-    const index = mockHotels.findIndex((h) => h.id === parseInt(hotelId));
-    if (index === -1) throw new Error("Hotel not found");
-    mockHotels[index] = { ...mockHotels[index], ...data };
-    return createResponse(mockHotels[index]);
-  },
-
-  deleteHotel: async (hotelId) => {
-    await delay();
-    return createResponse({ message: "Hotel deleted" });
-  },
-
-  approveHotel: async (hotelId) => {
-    await delay();
-    const hotel = mockHotels.find((h) => h.id === parseInt(hotelId));
-    if (hotel) hotel.status = "approved";
-    return createResponse({ message: "Hotel approved" });
-  },
-
-  rejectHotel: async (hotelId, reason) => {
-    await delay();
-    const hotel = mockHotels.find((h) => h.id === parseInt(hotelId));
-    if (hotel) hotel.status = "rejected";
-    return createResponse({ message: "Hotel rejected" });
-  },
 };
 
-// Mock 예약 API
 export const mockBookingApi = {
-  getBookings: async (params = {}) => {
-    await delay();
-    let filtered = [...mockBookings];
-
-    if (params.search) {
-      filtered = filtered.filter(
-        (b) =>
-          b.id.includes(params.search) ||
-          b.customerName.toLowerCase().includes(params.search.toLowerCase())
-      );
-    }
-    if (params.status) {
-      filtered = filtered.filter((b) => b.status === params.status);
-    }
-
-    return createResponse({
-      bookings: filtered,
-      totalPages: 1,
-      currentPage: params.page || 1,
-    });
-  },
-
-  getBookingById: async (bookingId) => {
-    await delay();
-    const booking = mockBookings.find((b) => b.id === bookingId);
-    if (!booking) throw new Error("Booking not found");
-    return createResponse(booking);
-  },
-
-  updateBookingStatus: async (bookingId, status) => {
-    await delay();
-    const booking = mockBookings.find((b) => b.id === bookingId);
-    if (booking) booking.status = status;
-    return createResponse({ message: "Status updated" });
-  },
-
-  cancelBooking: async (bookingId, reason) => {
-    await delay();
-    const booking = mockBookings.find((b) => b.id === bookingId);
-    if (booking) booking.status = "cancelled";
-    return createResponse({ message: "Booking cancelled" });
-  },
-
-  deleteBooking: async (bookingId) => {
-    await delay();
-    return createResponse({ message: "Booking deleted" });
-  },
+    getBookings: async () => { await delay(); return createResponse({ bookings: [...mockBookings], totalPages: 1 }); },
+    getBookingById: async (id) => { await delay(); return createResponse(mockBookings.find(b=>b.id===id)); },
+    updateBookingStatus: async () => { await delay(); return createResponse({}); },
+    cancelBooking: async () => { await delay(); return createResponse({}); },
+    deleteBooking: async () => { await delay(); return createResponse({}); }
 };
 
-// Mock 사용자 API
 export const mockUserApi = {
-  getUsers: async (params = {}) => {
-    await delay();
-    let filtered = [...mockUsers];
-
-    if (params.search) {
-      filtered = filtered.filter(
-        (u) =>
-          u.name.toLowerCase().includes(params.search.toLowerCase()) ||
-          u.email.toLowerCase().includes(params.search.toLowerCase())
-      );
-    }
-    if (params.type) {
-      filtered = filtered.filter((u) => u.type === params.type);
-    }
-    if (params.status) {
-      filtered = filtered.filter((u) => u.status === params.status);
-    }
-
-    return createResponse({
-      users: filtered,
-      totalPages: 1,
-      currentPage: params.page || 1,
-    });
-  },
-
-  getUserById: async (userId) => {
-    await delay();
-    const user = mockUsers.find((u) => u.id === parseInt(userId));
-    if (!user) throw new Error("User not found");
-    return createResponse(user);
-  },
-
-  updateUser: async (userId, data) => {
-    await delay();
-    const user = mockUsers.find((u) => u.id === parseInt(userId));
-    if (user) Object.assign(user, data);
-    return createResponse(user);
-  },
-
-  deleteUser: async (userId) => {
-    await delay();
-    return createResponse({ message: "User deleted" });
-  },
-
-  updateUserStatus: async (userId, status) => {
-    await delay();
-    const user = mockUsers.find((u) => u.id === parseInt(userId));
-    if (user) user.status = status;
-    return createResponse({ message: "Status updated" });
-  },
-
-  getBusinessUsers: async (params = {}) => {
-    await delay();
-    const business = mockUsers.filter((u) => u.type === "business");
-    return createResponse({
-      users: business,
-      totalPages: 1,
-      currentPage: params.page || 1,
-    });
-  },
+    getUsers: async () => { await delay(); return createResponse({ users: [...mockUsers], totalPages: 1 }); },
+    getUserById: async (id) => { await delay(); return createResponse(mockUsers.find(u=>u.id===parseInt(id))); },
+    updateUser: async () => { await delay(); return createResponse({}); },
+    deleteUser: async () => { await delay(); return createResponse({}); },
+    updateUserStatus: async () => { await delay(); return createResponse({}); },
+    getBusinessUsers: async () => { await delay(); return createResponse({ users: [], totalPages: 1 }); }
 };
 
-// Mock 리뷰 API
+// ★ Mock 리뷰 API (수정됨) ★
 export const mockReviewApi = {
   getReviews: async (params = {}) => {
     await delay();
-    let filtered = [...mockReviews];
+    let reviews = getStoredData("reviews", mockReviews);
 
+    // 필터링: reported가 true인 것만 가져오기 (관리자용)
+    if (params.reportedOnly) {
+      reviews = reviews.filter((r) => r.reported === true && r.status !== 'rejected');
+    }
+
+    // 검색 필터
     if (params.search) {
-      filtered = filtered.filter(
+      reviews = reviews.filter(
         (r) =>
           r.hotelName.toLowerCase().includes(params.search.toLowerCase()) ||
-          r.author.toLowerCase().includes(params.search.toLowerCase())
-      );
-    }
-    if (params.rating) {
-      filtered = filtered.filter((r) => r.rating === parseInt(params.rating));
-    }
-    if (params.reported) {
-      filtered = filtered.filter(
-        (r) => r.reported === (params.reported === "true")
+          r.guestName.toLowerCase().includes(params.search.toLowerCase())
       );
     }
 
     return createResponse({
-      reviews: filtered,
+      reviews: reviews,
       totalPages: 1,
-      currentPage: params.page || 1,
+      currentPage: 1,
     });
   },
 
   getReviewById: async (reviewId) => {
     await delay();
-    const review = mockReviews.find((r) => r.id === parseInt(reviewId));
-    if (!review) throw new Error("Review not found");
+    const reviews = getStoredData("reviews", mockReviews);
+    const review = reviews.find((r) => r.id === parseInt(reviewId));
     return createResponse(review);
   },
 
+  // 승인 시 -> 리뷰 삭제
   deleteReview: async (reviewId) => {
     await delay();
-    return createResponse({ message: "Review deleted" });
+    let reviews = getStoredData("reviews", mockReviews);
+    reviews = reviews.filter((r) => r.id !== parseInt(reviewId));
+    setStoredData("reviews", reviews);
+    return createResponse({ message: "Review deleted (Report Approved)" });
   },
 
-  getReportedReviews: async (params = {}) => {
+  // 거부 시 -> 상태 변경 및 사유 저장
+  rejectReport: async (reviewId, reason) => {
     await delay();
-    const reported = mockReviews.filter((r) => r.reported);
-    return createResponse({
-      reviews: reported,
-      totalPages: 1,
-      currentPage: params.page || 1,
-    });
+    const reviews = getStoredData("reviews", mockReviews);
+    const review = reviews.find((r) => r.id === parseInt(reviewId));
+    if (review) {
+      review.status = "rejected"; // 신고 거부 상태
+      review.adminResponse = reason; // 거부 사유 저장
+      setStoredData("reviews", reviews);
+    }
+    return createResponse({ message: "Report rejected" });
   },
-
-  handleReport: async (reviewId, action) => {
-    await delay();
-    return createResponse({ message: "Report handled" });
-  },
+  
+  // 사업자가 신고하기
+  reportReview: async (reviewId, reason) => {
+      await delay();
+      const reviews = getStoredData("reviews", mockReviews);
+      const review = reviews.find((r) => r.id === parseInt(reviewId));
+      if (review) {
+          review.reported = true;
+          review.reportReason = reason;
+          review.status = "pending"; // 대기 상태
+          setStoredData("reviews", reviews);
+      }
+      return createResponse({ message: "Reported successfully" });
+  }
 };
 
-// Mock 통계 API
 export const mockStatsApi = {
-  getDashboardStats: async () => {
-    await delay();
-    return createResponse(mockDashboardStats);
-  },
+    getDashboardStats: async () => { await delay(); return createResponse(mockDashboardStats); },
+    getRevenueStats: async () => { await delay(); return createResponse({}); },
+    getBookingStats: async () => { await delay(); return createResponse({}); },
+    getUserStats: async () => { await delay(); return createResponse({}); },
+    getHotelStats: async () => { await delay(); return createResponse({}); }
+};
 
-  getRevenueStats: async (params = {}) => {
-    await delay();
-    return createResponse({
-      total: 12500000,
-      monthly: mockDashboardStats.chartData.revenue,
-    });
-  },
-
-  getBookingStats: async (params = {}) => {
-    await delay();
-    return createResponse({
-      total: 342,
-      monthly: mockDashboardStats.chartData.bookings,
-    });
-  },
-
-  getUserStats: async (params = {}) => {
-    await delay();
-    return createResponse({
-      total: 1523,
-      new: 8,
-      active: 1245,
-    });
-  },
-
-  getHotelStats: async (params = {}) => {
-    await delay();
-    return createResponse({
-      total: 45,
-      active: 42,
-      pending: 3,
-    });
-  },
+export const mockCouponApi = {
+    getCoupons: async () => { await delay(); let c = getStoredData("coupons", mockCoupons); return createResponse({ coupons: [...c] }); },
+    getCouponById: async (id) => { await delay(); let c = getStoredData("coupons", mockCoupons); return createResponse(c.find(x=>x.id===parseInt(id))); },
+    createCoupon: async (data) => { await delay(); let c = getStoredData("coupons", mockCoupons); const n={id:c.length+1, ...data, usedCount:0, status:'active', createdAt:new Date().toISOString()}; c.push(n); setStoredData("coupons", c); return createResponse(n); },
+    updateCoupon: async (id, data) => { await delay(); let c = getStoredData("coupons", mockCoupons); const i=c.findIndex(x=>x.id===parseInt(id)); if(i>-1){c[i]={...c[i],...data}; setStoredData("coupons", c); return createResponse(c[i]);} },
+    deleteCoupon: async (id) => { await delay(); let c = getStoredData("coupons", mockCoupons); c=c.filter(x=>x.id!==parseInt(id)); setStoredData("coupons", c); return createResponse({}); }
 };

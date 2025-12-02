@@ -25,11 +25,10 @@ const AdminDashboardPage = () => {
 
   if (loading) return <div className="loading">대시보드 로딩 중...</div>;
 
-  // 통계 카드 데이터
+  // 통계 카드 데이터 (오늘 예약 제거됨)
   const statsCards = [
     { title: "운영중인 호텔", value: `${dashboardData.activeHotels}개`, change: `+${dashboardData.monthlyGrowth.hotels}%`, positive: true, icon: "🏨", color: "#f59e0b" },
     { title: "이번 달 총 매출", value: `₩${dashboardData.totalRevenue.toLocaleString()}`, change: `+${dashboardData.monthlyGrowth.revenue}%`, positive: true, icon: "💰", color: "#10b981" },
-    { title: "오늘 예약", value: `${dashboardData.todayBookings}건`, change: `+${dashboardData.monthlyGrowth.bookings}%`, positive: true, icon: "📅", color: "#2563eb" },
     { title: "신규 회원", value: `${dashboardData.newUsers}명`, change: `+${dashboardData.monthlyGrowth.users}%`, positive: true, icon: "👥", color: "#06b6d4" }
   ];
 
@@ -39,8 +38,8 @@ const AdminDashboardPage = () => {
         <h1>📊 관리자 대시보드</h1>
       </div>
 
-      {/* 통계 카드 */}
-      <div className="stats-grid">
+      {/* 통계 카드 (3열로 변경) */}
+      <div className="stats-grid" style={{gridTemplateColumns:'repeat(3, 1fr)'}}>
         {statsCards.map((card, index) => (
           <div key={index} className="stat-card">
             <div className="stat-header">
@@ -55,7 +54,7 @@ const AdminDashboardPage = () => {
         ))}
       </div>
 
-      {/* ★ 월별 매출 차트 ★ */}
+      {/* 매출 차트 */}
       <div className="card" style={{marginBottom:'30px'}}>
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
           <h3 style={{marginBottom:0, borderLeft:'4px solid #3b82f6', paddingLeft:'10px'}}>📈 월별 매출 분석 (단위: 원)</h3>
@@ -67,21 +66,13 @@ const AdminDashboardPage = () => {
         <AdminChartArea data={dashboardData.chartData} />
       </div>
 
-      {/* 최근 활동 */}
-      <div className="dashboard-sections" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+      {/* 최근 활동 (최근 예약 목록 제거) */}
+      <div className="dashboard-sections">
         <div className="card">
-          <div style={{marginBottom:'15px', paddingBottom:'10px', borderBottom:'1px solid #eee'}}><h3>📋 최근 예약</h3></div>
-          <div className="recent-list">
-            {dashboardData.recentBookings.map(booking => (
-              <div key={booking.id} style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems:'center' }}>
-                <div><div style={{fontWeight:'600', color:'#334155'}}>{booking.guestName}</div><div style={{fontSize:'12px', color:'#64748b'}}>{booking.hotelName}</div></div>
-                <div style={{textAlign:'right'}}><span className={`badge badge-${booking.status === 'confirmed' ? 'success' : 'warning'}`}>{booking.status === 'confirmed' ? '확정' : '대기'}</span><div style={{ fontSize: '12px', marginTop: '4px', fontWeight:'bold', color:'#64748b' }}>₩{booking.amount.toLocaleString()}</div></div>
-              </div>
-            ))}
+          <div style={{marginBottom:'15px', paddingBottom:'10px', borderBottom:'1px solid #eee', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+            <h3>👥 최근 가입 회원</h3>
+            <button className="btn btn-outline-sm" onClick={() => navigate('/admin/users')}>더보기</button>
           </div>
-        </div>
-        <div className="card">
-          <div style={{marginBottom:'15px', paddingBottom:'10px', borderBottom:'1px solid #eee'}}><h3>👥 신규 회원</h3></div>
           <div className="recent-list">
             {dashboardData.recentUsers.map(user => (
               <div key={user.id} style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems:'center' }}>

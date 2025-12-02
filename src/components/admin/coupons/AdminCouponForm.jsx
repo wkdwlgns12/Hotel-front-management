@@ -7,7 +7,7 @@ const AdminCouponForm = ({ coupon, onSubmit, onCancel }) => {
     type: "fixed",
     discount: 0,
     minOrderAmount: 0,
-    targetGrade: "all", // ★ 등급별 발급 추가 ★
+    targetGrade: "all", // ★ 회원 등급 타겟팅
     startDate: "",
     endDate: "",
     description: "",
@@ -38,12 +38,12 @@ const AdminCouponForm = ({ coupon, onSubmit, onCancel }) => {
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className="card">
       <div className="form-group">
         <label>쿠폰명</label>
-        <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+        <input type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="예: 신규 가입 환영 쿠폰" />
       </div>
 
       <div className="form-group">
         <label>쿠폰 코드</label>
-        <input type="text" name="code" value={formData.code} onChange={handleChange} required />
+        <input type="text" name="code" value={formData.code} onChange={handleChange} required placeholder="예: WELCOME2024" />
       </div>
 
       <div className="form-group" style={{ display: 'flex', gap: '20px' }}>
@@ -60,10 +60,15 @@ const AdminCouponForm = ({ coupon, onSubmit, onCancel }) => {
         </div>
       </div>
 
-      {/* ★ 회원 등급 타겟팅 ★ */}
+      {/* ★ 회원 등급 선택 기능 ★ */}
       <div className="form-group">
         <label>발급 대상 회원 등급</label>
-        <select name="targetGrade" value={formData.targetGrade} onChange={handleChange} style={{border:'2px solid #3b82f6', background:'#eff6ff'}}>
+        <select 
+          name="targetGrade" 
+          value={formData.targetGrade} 
+          onChange={handleChange} 
+          style={{border:'2px solid #3b82f6', background:'#eff6ff'}}
+        >
           <option value="all">전체 회원</option>
           <option value="VVIP">VVIP 등급 이상</option>
           <option value="VIP">VIP 등급 이상</option>
@@ -71,7 +76,9 @@ const AdminCouponForm = ({ coupon, onSubmit, onCancel }) => {
           <option value="Silver">Silver 등급 이상</option>
           <option value="New">신규 회원 전용</option>
         </select>
-        <p style={{fontSize:'0.8rem', color:'#64748b', marginTop:'5px'}}>* 선택한 등급 이상의 회원에게 쿠폰이 발급됩니다.</p>
+        <p style={{fontSize:'0.85rem', color:'#64748b', marginTop:'6px'}}>
+          * 선택한 등급 조건에 해당하는 회원에게만 쿠폰이 발급/노출됩니다.
+        </p>
       </div>
 
       <div className="form-group" style={{ display: 'flex', gap: '20px' }}>

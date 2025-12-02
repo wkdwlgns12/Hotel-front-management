@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { mockHotelApi } from "../../api/mockApi";
+import { adminHotelApi } from "../../api/adminHotelApi";
 import { useNavigate } from "react-router-dom";
 
 const AdminHotelListPage = () => {
@@ -13,17 +13,22 @@ const AdminHotelListPage = () => {
   const loadHotels = async () => {
     try {
       setLoading(true);
-      const data = await mockHotelApi.getHotels(filters);
-      setHotels(data.hotels);
-    } catch (error) { console.error("로드 실패", error); } 
+      const data = await adminHotelApi.getHotels(filters);
+      // 데이터가 배열인지 확인하고 설정 (안전장치)
+      const hotelList = Array.isArray(data.hotels) ? data.hotels : (Array.isArray(data) ? data : []);
+      setHotels(hotelList);
+    } catch (error) { 
+      console.error("로드 실패", error);
+      setHotels([]); // 에러 시 빈 배열로 설정하여 렌더링 오류 방지
+    } 
     finally { setLoading(false); }
   };
 
   const handleStatusChange = async (hotelId, newStatus) => {
     if(!confirm(`정말 ${newStatus === 'approved' ? '승인' : '거부'} 하시겠습니까?`)) return;
     try {
-      if (newStatus === "approved") await mockHotelApi.approveHotel(hotelId);
-      else if (newStatus === "rejected") await mockHotelApi.rejectHotel(hotelId);
+      if (newStatus === "approved") await adminHotelApi.approveHotel(hotelId);
+      else if (newStatus === "rejected") await adminHotelApi.rejectHotel(hotelId, "관리자 거부");
       loadHotels();
     } catch (error) { alert("처리 실패"); }
   };
@@ -43,7 +48,6 @@ const AdminHotelListPage = () => {
 
       <div className="filter-section card" style={{padding:'20px'}}>
         <div className="filter-grid" style={{display:'flex', gap:'15px', alignItems:'center'}}>
-          {/* ★ 검색창 CSS 꾸미기 ★ */}
           <div style={{position:'relative', flex:1}}>
             <span style={{position:'absolute', left:'12px', top:'50%', transform:'translateY(-50%)', fontSize:'1.2rem'}}>🔍</span>
             <input 
@@ -51,18 +55,7 @@ const AdminHotelListPage = () => {
               placeholder="호텔명으로 검색하세요..." 
               value={filters.search} 
               onChange={(e) => setFilters({...filters, search: e.target.value})} 
-              style={{
-                width:'100%', 
-                padding:'12px 12px 12px 40px', 
-                border:'2px solid #e2e8f0', 
-                borderRadius:'30px', 
-                fontSize:'1rem',
-                outline:'none',
-                transition: 'border-color 0.2s',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.03)'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              style={{width:'100%', padding:'12px 12px 12px 40px', border:'2px solid #e2e8f0', borderRadius:'30px', fontSize:'1rem', outline:'none'}}
             />
           </div>
           
@@ -77,38 +70,49 @@ const AdminHotelListPage = () => {
             <option value="서울">서울</option>
             <option value="부산">부산</option>
             <option value="제주">제주</option>
+            <option value="경기">경기</option>
           </select>
         </div>
       </div>
 
       {loading ? <div className="loading">로딩 중...</div> : (
         <div className="hotels-grid">
-          {hotels.map(hotel => (
-            <div key={hotel.id} className="hotel-card">
-              <div className="hotel-image">
-                <img src={hotel.images[0] || "/api/placeholder/hotel.jpg"} alt={hotel.name} />
-                <div className="hotel-status">{getStatusBadge(hotel.status)}</div>
-              </div>
-              <div className="hotel-content">
-                <h3 className="hotel-name">{hotel.name}</h3>
-                <p className="hotel-address">📍 {hotel.address}</p>
-                <div className="hotel-info">
-                  <span>{hotel.category}</span>
-                  <span>⭐ {hotel.rating}</span>
-                  <span>🛏️ {hotel.rooms}실</span>
+          {hotels.length > 0 ? (
+            hotels.map(hotel => (
+              <div key={hotel.id} className="hotel-card">
+                <div className="hotel-image">
+                  {/* ★ 수정된 부분: 이미지가 배열이고 비어있지 않은지 확인 후 접근 ★ */}
+                  <img 
+                    src={(hotel.images && hotel.images.length > 0) ? hotel.images[0] : "/api/placeholder/hotel.jpg"} 
+                    alt={hotel.name || "호텔"} 
+                  />
+                  <div className="hotel-status">{getStatusBadge(hotel.status)}</div>
                 </div>
-                <div className="hotel-actions">
-                  <button className="btn btn-outline-sm" onClick={() => navigate(`/admin/hotels/${hotel.id}/edit`)}>📋 상세보기</button>
-                  {hotel.status === "pending" && (
-                    <>
-                      <button className="btn btn-success-sm" onClick={() => handleStatusChange(hotel.id, "approved")}>승인</button>
-                      <button className="btn btn-danger-sm" onClick={() => handleStatusChange(hotel.id, "rejected")}>거부</button>
-                    </>
-                  )}
+                <div className="hotel-content">
+                  <h3 className="hotel-name">{hotel.name}</h3>
+                  <p className="hotel-address">📍 {hotel.address}</p>
+                  <div className="hotel-info">
+                    <span>{hotel.category}</span>
+                    <span>⭐ {hotel.rating}</span>
+                    <span>🛏️ {hotel.rooms}실</span>
+                  </div>
+                  <div className="hotel-actions">
+                    <button className="btn btn-outline-sm" onClick={() => navigate(`/admin/hotels/${hotel.id}/edit`)}>📋 상세보기</button>
+                    {hotel.status === "pending" && (
+                      <>
+                        <button className="btn btn-success-sm" onClick={() => handleStatusChange(hotel.id, "approved")}>승인</button>
+                        <button className="btn btn-danger-sm" onClick={() => handleStatusChange(hotel.id, "rejected")}>거부</button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="empty-state" style={{gridColumn: "1 / -1", textAlign: "center", padding: "40px"}}>
+              <p>등록된 호텔이 없습니다.</p>
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
