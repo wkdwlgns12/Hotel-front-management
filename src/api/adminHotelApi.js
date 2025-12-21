@@ -1,37 +1,43 @@
 import axiosClient from "./axiosClient";
-import { mockHotelApi } from "./mockApi";
-
-const USE_MOCK = false;
+import hotelApi from "./hotelApi";
 
 export const adminHotelApi = {
-  getHotels: (params) => {
-    if (USE_MOCK) return mockHotelApi.getHotels(params);
-    return axiosClient.get("/admin/hotels", { params });
+  // 관리자: 전체 호텔 목록 조회
+  getAllHotels: async (params = {}) => {
+    return await hotelApi.getAllHotels(params);
   },
-  getHotelById: (hotelId) => {
-    if (USE_MOCK) return mockHotelApi.getHotelById(hotelId);
-    return axiosClient.get(`/admin/hotels/${hotelId}`);
+
+  // 관리자: 승인 대기 호텔 목록
+  getPendingHotels: async (params = {}) => {
+    return await hotelApi.getPendingHotels(params);
   },
-  createHotel: (data) => {
-    if (USE_MOCK) return mockHotelApi.createHotel(data);
-    return axiosClient.post("/admin/hotels", data);
+
+  // 관리자: 호텔 단일 조회
+  getHotelById: async (hotelId) => {
+    const response = await axiosClient.get(`/hotel/admin/${hotelId}`);
+    return response.data;
   },
-  updateHotel: (hotelId, data) => {
-    if (USE_MOCK) return mockHotelApi.updateHotel(hotelId, data);
-    return axiosClient.put(`/admin/hotels/${hotelId}`, data);
+
+  // 관리자: 호텔 생성 (owner API 사용, admin도 사용 가능)
+  createHotel: async (formData) => {
+    return await hotelApi.createHotel(formData);
   },
-  deleteHotel: (hotelId) => {
-    if (USE_MOCK) return mockHotelApi.deleteHotel(hotelId);
-    return axiosClient.delete(`/admin/hotels/${hotelId}`);
+
+  // 관리자: 호텔 수정 (owner API 사용, admin도 사용 가능)
+  updateHotel: async (hotelId, formData) => {
+    return await hotelApi.updateHotel(hotelId, formData);
   },
-  approveHotel: (hotelId) => {
-    if (USE_MOCK) return mockHotelApi.approveHotel(hotelId);
-    return axiosClient.post(`/admin/hotels/${hotelId}/approve`);
+
+  // 관리자: 호텔 승인
+  approveHotel: async (hotelId) => {
+    return await hotelApi.approveHotel(hotelId);
   },
-  rejectHotel: (hotelId, reason) => {
-    if (USE_MOCK) return mockHotelApi.rejectHotel(hotelId, reason);
-    return axiosClient.post(`/admin/hotels/${hotelId}/reject`, { reason });
+
+  // 관리자: 호텔 거절
+  rejectHotel: async (hotelId) => {
+    return await hotelApi.rejectHotel(hotelId);
   },
 };
 
 export default adminHotelApi;
+

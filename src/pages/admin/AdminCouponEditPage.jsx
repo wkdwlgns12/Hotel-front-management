@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminCouponForm from "../../components/admin/coupons/AdminCouponForm";
-import { adminCouponApi } from "../../api/adminCouponApi"; // API 임포트
 import Loader from "../../components/common/Loader";
 import ErrorMessage from "../../components/common/ErrorMessage";
 
@@ -19,11 +18,10 @@ const AdminCouponEditPage = () => {
   const fetchCoupon = async () => {
     try {
       setLoading(true);
-      // ★ 상세 조회 API 호출 ★
-      const data = await adminCouponApi.getCouponById(couponId);
-      setCoupon(data);
+      // TODO: API 연결
+      setCoupon({});
     } catch (err) {
-      setError("데이터를 불러오는데 실패했습니다.");
+      setError(err.message || "데이터를 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -31,12 +29,11 @@ const AdminCouponEditPage = () => {
 
   const handleSubmit = async (formData) => {
     try {
-      // ★ 수정 API 호출 ★
-      await adminCouponApi.updateCoupon(couponId, formData);
+      // TODO: API 연결
       alert("쿠폰이 수정되었습니다.");
       navigate("/admin/coupons");
     } catch (err) {
-      alert("수정에 실패했습니다.");
+      alert(err.message || "수정에 실패했습니다.");
     }
   };
 
@@ -52,6 +49,7 @@ const AdminCouponEditPage = () => {
       <div className="page-header">
         <h1>쿠폰 수정</h1>
       </div>
+
       <AdminCouponForm
         coupon={coupon}
         onSubmit={handleSubmit}
