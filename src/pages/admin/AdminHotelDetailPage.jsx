@@ -27,29 +27,11 @@ const AdminHotelDetailPage = () => {
       // 객실 목록 조회
       try {
         const roomsResponse = await adminHotelApi.getRoomsByHotel(hotelId);
-        console.log("객실 응답 전체:", roomsResponse);
         // axiosClient 인터셉터가 response.data를 반환하므로, roomsResponse는 { success, message, data } 구조
-        // OwnerHotelDetailPage와 동일한 방식으로 처리
-        let roomsData = null;
-        
-        // 응답 구조 확인 및 데이터 추출
-        if (roomsResponse && roomsResponse.data !== undefined) {
-          // { success, message, data: [...] } 구조
-          roomsData = roomsResponse.data;
-        } else if (Array.isArray(roomsResponse)) {
-          // 이미 배열인 경우 (예외 상황)
-          roomsData = roomsResponse;
-        } else {
-          roomsData = [];
-        }
-        
-        console.log("추출된 객실 데이터:", roomsData);
+        const roomsData = roomsResponse?.data || roomsResponse;
         setRooms(Array.isArray(roomsData) ? roomsData : []);
       } catch (roomErr) {
-        console.error("객실 목록 로드 실패 - 상세:", roomErr);
-        console.error("에러 응답:", roomErr.response);
-        console.error("에러 메시지:", roomErr.message);
-        // 에러가 발생해도 빈 배열로 설정하여 페이지는 정상 표시
+        console.error("객실 목록 로드 실패:", roomErr);
         setRooms([]);
       }
     } catch (err) {
@@ -199,12 +181,7 @@ const AdminHotelDetailPage = () => {
       <div className="rooms-section" style={{ background: "white", padding: "30px", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
         <h2 style={{ margin: "0 0 20px 0" }}>객실 목록</h2>
         {rooms.length === 0 ? (
-          <div>
-            <p style={{ marginBottom: "10px" }}>등록된 객실이 없습니다.</p>
-            <p style={{ fontSize: "12px", color: "#666" }}>
-              사업자가 객실을 생성했지만 표시되지 않는 경우, 브라우저 콘솔을 확인해주세요.
-            </p>
-          </div>
+          <p>등록된 객실이 없습니다.</p>
         ) : (
           <div className="rooms-table">
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -254,5 +231,3 @@ const AdminHotelDetailPage = () => {
 };
 
 export default AdminHotelDetailPage;
-
-
