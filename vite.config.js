@@ -1,5 +1,5 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,13 +12,8 @@ export default defineConfig({
       usePolling: true, // Docker에서 파일 변경 감지
     },
   },
+
   css: {
-    devSourcemap: true,
-    preprocessorOptions: {
-      scss: {
-        sourceMap: true,
-        sourceMapContents: true,
-      },
-    },
-  },
-});
+    devSourcemap: true
+  }
+})

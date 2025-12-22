@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { adminHotelApi } from "../../api/adminHotelApi";
-import roomApi from "../../api/roomApi";
 import Loader from "../../components/common/Loader";
 import StatusBadge from "../../components/common/StatusBadge";
 import ErrorMessage from "../../components/common/ErrorMessage";
@@ -27,8 +26,9 @@ const AdminHotelDetailPage = () => {
 
       // 객실 목록 조회
       try {
-        const roomsResponse = await roomApi.getRoomsByHotel(hotelId);
-        const roomsData = roomsResponse.data || roomsResponse;
+        const roomsResponse = await adminHotelApi.getRoomsByHotel(hotelId);
+        // axiosClient 인터셉터가 response.data를 반환하므로, roomsResponse는 { success, message, data } 구조
+        const roomsData = roomsResponse?.data || roomsResponse;
         setRooms(Array.isArray(roomsData) ? roomsData : []);
       } catch (roomErr) {
         console.error("객실 목록 로드 실패:", roomErr);
@@ -231,4 +231,3 @@ const AdminHotelDetailPage = () => {
 };
 
 export default AdminHotelDetailPage;
-

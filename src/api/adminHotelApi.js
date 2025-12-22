@@ -37,6 +37,11 @@ export const adminHotelApi = {
   rejectHotel: async (hotelId) => {
     return await hotelApi.rejectHotel(hotelId);
   },
+
+  // 관리자: 특정 호텔의 객실 목록 조회 (owner API 사용, admin도 사용 가능)
+  getRoomsByHotel: async (hotelId) => {
+    return await roomApi.getRoomsByHotel(hotelId);
+  },
 };
 
 export default adminHotelApi;
