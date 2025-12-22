@@ -1,6 +1,5 @@
 import axiosClient from "./axiosClient";
 import hotelApi from "./hotelApi";
-import roomApi from "./roomApi";
 
 export const adminHotelApi = {
   // 관리자: 전체 호텔 목록 조회
